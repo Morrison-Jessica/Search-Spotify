@@ -1,11 +1,12 @@
-// 💜
+// 💜 auth
 const express = require('express');
 const router = express.Router();
 
 
-const { login, logout, callback } = require("../controllers/authController");
-
+const { login, callback, logout } = require("../controllers/authController");
+// on click ... 
 router.get("/login", login);
+// come back to ...
 router.get("/callback", callback);
 router.get("/logout", logout);
 

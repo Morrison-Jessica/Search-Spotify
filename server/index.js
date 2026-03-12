@@ -8,16 +8,18 @@ const app = express();
 const routeHandler = require('./routes');
 
 app.use(morgan('dev'));
-// app.use(cors({ 
-//     origin : process.env.CLIENT_URL,
-//     credentials : true,
-//     })
-// );
+app.use(cors({ 
+    origin : process.env.CLIENT_URL,
+    credentials : true,
+    })
+);
 
 
 // =====================
 // ==== MIDDLEWARES ====
 // =====================
+
+
 // JSON data parsing 
 app.use(express.json());
 
