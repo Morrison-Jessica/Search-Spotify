@@ -1,5 +1,4 @@
 // 💛
-const express = require('express');
 const mongoose = require('mongoose');
 
 const userInfo = new mongoose.Schema({
@@ -7,14 +6,7 @@ const userInfo = new mongoose.Schema({
   email: String,
   name: String,
   picture: String
-
-
-  
 });
+const User = mongoose.model('User', userInfo);
 
-
-
-
-
-
-module.exports = userInfo;
+module.exports = User;

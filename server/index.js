@@ -2,6 +2,7 @@
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
+const mongoose = require('mongoose');
 
 const app = express();
 
@@ -13,6 +14,10 @@ app.use(cors({
     credentials : true,
     })
 );
+// CREATE dbConfig file and import here
+mongoose.connect(process.env.MONGO_URI)
+    .then(() => console.log("MongoDB connected"))
+    .catch((err) => console.error("MongoDB connection error:", err));
 
 
 // =====================
