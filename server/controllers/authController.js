@@ -1,4 +1,4 @@
-// 💚
+// 🎫💚 - GOOGLE OAUTH
 const axios = require('axios');
 const User = require('../models/model');
 // Google Auth lines go here 
@@ -89,6 +89,10 @@ const callback = async (req, res) => {
         console.error("Google OAuth callback error:", err);
         res.status(500).json({ message: "Google auth failed", success: false });
     }
+    // IMPORT ABOVE... also maybe 
+    // - npm install express-jwt
+
+    // const jwyToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 };  // END CALLBACK
 // =======================
 // ======== LOGOUT =======
