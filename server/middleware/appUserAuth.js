@@ -1,5 +1,8 @@
 // 🧰 - Handles user auth tokens ( access & refresh ) 
+// express Validator ??? 
 // App session - routes req auth
+
+// add header to request, header = JWT
 const jwt = require ( "jsonwebtoken" ); // 🔐 JWT verify helper (from jsonwebtoken)
 const User = require ( "../models/model" ); // 🧑‍💻 User model (from models/model.js)
 // =========================================================
@@ -13,6 +16,7 @@ const User = require ( "../models/model" ); // 🧑‍💻 User model (from mode
 //const isAuth = (req, res, next) => {
     // const appAuthHandler = req.headers["authorization"];
     // const token = authHeader.split(" ")[1];
+    // 📬Postman: Auth - select Bearer Token from dropdown
     // const decoded = jwt.verify(token, process.env.JWT_SECRET);
     // console.log ... 
 // ***********************************************************

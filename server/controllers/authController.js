@@ -1,10 +1,12 @@
 // 🎫💚 - GOOGLE OAUTH
 const axios = require('axios');
 const User = require('../models/model');
+const jwt = require('jsonwebtoken');
 // Google Auth lines go here 
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo";
+
 
 // ======================
 // ======== LOGIN =======
@@ -46,8 +48,9 @@ const callback = async (req, res) => {
             grant_type: 'authorization_code',
         });
 
-// later, check if google token is expired, if so, use refresh token to get new access token or ask user to login again - "Please login into Google to continue"
+// Google token expired? use refresh token to get new access token or user logs in again... 
         const { access_token, expires_in, refresh_token } = tokenResponse.data;
+        const hasRefreshToken = Boolean(refresh_token);
         
         const userInfoResponse = await axios.get(GOOGLE_USERINFO_URL, { headers: { Authorization: `Bearer ${access_token}` } });
 
@@ -62,7 +65,9 @@ const callback = async (req, res) => {
                 user.picture = picture;
                 user.access_token = access_token;
                 user.expires_in = expires_in;
-                user.refresh_token = refresh_token;
+                if (refresh_token) {
+                    user.refresh_token = refresh_token;
+                }  // confirms without exposure
                 await user.save();
             } else {
                 // Create new user
@@ -77,23 +82,23 @@ const callback = async (req, res) => {
                 });
                 await user.save();
             }
+        const jwtToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
         const safeUser = {
             id: user._id,
             googleId: user.googleId,
             email: user.email,
             name: user.name,
-            picture: user.picture
+            picture: user.picture,
+            hasRefreshToken
         };
-        res.status(200).json({ message: "Google auth success", success: true, user: safeUser });
+        res.status(200).json({ message: "Google auth success", success: true, user: safeUser, token: jwtToken });
     } catch (err) {
         console.error("Google OAuth callback error:", err);
         res.status(500).json({ message: "Google auth failed", success: false });
     }
-    // IMPORT ABOVE... also maybe 
-    // - npm install express-jwt
-
-    // const jwyToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 };  // END CALLBACK
+
+
 // =======================
 // ======== LOGOUT =======
 // =======================
