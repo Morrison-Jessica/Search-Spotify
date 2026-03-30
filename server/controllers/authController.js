@@ -94,6 +94,9 @@ const callback = async (req, res) => {
                 });
                 user.sheetId = sheet.spreadsheetId;
                 user.sheetUrl = sheet.spreadsheetUrl;
+                if (!user.sheetDbUrl && process.env.SHEETDB_API_URL) {
+                    user.sheetDbUrl = process.env.SHEETDB_API_URL;
+                }
                 await user.save();
             } catch (sheetErr) {
                 console.error("Google Sheets create error:", sheetErr);
@@ -101,8 +104,7 @@ const callback = async (req, res) => {
         }
         const jwtToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
         const appUrl = process.env.APP_URL;
-        const redirectUrl = new URL('/dashboard', appUrl);
-        redirectUrl.searchParams.set("token", jwtToken);
+        const redirectUrl = `${appUrl}/#/dashboard?token=${encodeURIComponent(jwtToken)}`;
         const safeUser = {
             id: user._id,
             googleId: user.googleId,
@@ -112,7 +114,7 @@ const callback = async (req, res) => {
             hasRefreshToken
         };
         //res.status(200).json({ message: "Google auth success", success: true, user: safeUser, token: jwtToken });
-        return res.redirect(redirectUrl.toString());
+        return res.redirect(redirectUrl);
     } catch (err) {
         console.error("Google OAuth callback error:", err);
         res.status(500).json({ message: "Google auth failed", success: false });
