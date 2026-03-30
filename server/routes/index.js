@@ -1,11 +1,13 @@
-// 💜 index - imports all routes "App Global"
+// 🗄️💜 index - imports all routes "App Global"
 const express = require("express");
 const router = express.Router();
 const authRouter = require('./authRoute');
-// const appUserAuth = require('../middlewares/appUserAuth');  
+const appUserAuth = require('../middleware/appUserAuth');
+const appRouter = require('./appRoutes');
 
 
 router.use("/auth", authRouter);
+router.use("/app", appUserAuth, appRouter);
 
 
 // ==== appUserAuth Middleware called ====

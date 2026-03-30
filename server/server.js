@@ -1,4 +1,4 @@
-// 💙 - app is imported from index, this file starts server
+// 🗄️🚪💙 - app is imported from index, this file starts server
 require('dotenv').config();
 const app = require('./index');
 

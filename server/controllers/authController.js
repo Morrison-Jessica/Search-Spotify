@@ -2,6 +2,7 @@
 const axios = require('axios');
 const User = require('../models/model');
 const jwt = require('jsonwebtoken');
+const { createSpreadsheetForUser } = require('../services/googleSheetsService');
 // Google Auth lines go here 
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
@@ -18,7 +19,7 @@ const login = async (req, res) => {
         client_id: process.env.GOOGLE_CLIENT_ID,
         redirect_uri: process.env.GOOGLE_REDIRECT_URI,
         response_type: 'code',
-        scope: 'profile email',
+        scope: 'profile email https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file',
         access_type: 'offline',
         prompt: 'consent'
     });
@@ -48,9 +49,10 @@ const callback = async (req, res) => {
             grant_type: 'authorization_code',
         });
 
-// Google token expired? use refresh token to get new access token or user logs in again... 
+        // Google token expired? use refresh token to get new access token or user logs in again... 
         const { access_token, expires_in, refresh_token } = tokenResponse.data;
         const hasRefreshToken = Boolean(refresh_token);
+        const expires_at = expires_in ? new Date(Date.now() + (expires_in * 1000)) : null;
         
         const userInfoResponse = await axios.get(GOOGLE_USERINFO_URL, { headers: { Authorization: `Bearer ${access_token}` } });
 
@@ -65,6 +67,7 @@ const callback = async (req, res) => {
                 user.picture = picture;
                 user.access_token = access_token;
                 user.expires_in = expires_in;
+                user.expires_at = expires_at;
                 if (refresh_token) {
                     user.refresh_token = refresh_token;
                 }  // confirms without exposure
@@ -78,11 +81,28 @@ const callback = async (req, res) => {
                     picture,
                     access_token,
                     expires_in,
-                    refresh_token
+                    refresh_token,
+                    expires_at
                 });
                 await user.save();
             }
+        if (!user.sheetId) {
+            try {
+                const sheet = await createSpreadsheetForUser({
+                    accessToken: access_token,
+                    userName: name
+                });
+                user.sheetId = sheet.spreadsheetId;
+                user.sheetUrl = sheet.spreadsheetUrl;
+                await user.save();
+            } catch (sheetErr) {
+                console.error("Google Sheets create error:", sheetErr);
+            }
+        }
         const jwtToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        const appUrl = process.env.APP_URL;
+        const redirectUrl = new URL('/dashboard', appUrl);
+        redirectUrl.searchParams.set("token", jwtToken);
         const safeUser = {
             id: user._id,
             googleId: user.googleId,
@@ -91,7 +111,8 @@ const callback = async (req, res) => {
             picture: user.picture,
             hasRefreshToken
         };
-        res.status(200).json({ message: "Google auth success", success: true, user: safeUser, token: jwtToken });
+        //res.status(200).json({ message: "Google auth success", success: true, user: safeUser, token: jwtToken });
+        return res.redirect(redirectUrl.toString());
     } catch (err) {
         console.error("Google OAuth callback error:", err);
         res.status(500).json({ message: "Google auth failed", success: false });

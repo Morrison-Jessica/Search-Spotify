@@ -1,4 +1,4 @@
-// ❌ - global error handler. Recieves err from asyncWrap.js
+// 🗄️🧰❌ - global error handler. Recieves err from asyncWrap.js
 const errorHandler = ( err, req, res, next) => {
     // log error in console
     console.error("💥 Global Error: ", err );
@@ -9,11 +9,10 @@ const errorHandler = ( err, req, res, next) => {
     const message = err.message || "Something went wrong 🤷🏻‍♀️";
 
     // consistent JSON response 
-    res.status (status).json ({
+    res.status( status ).json ({
         success: false,  // shows as failed
         message,  // readable error message
     });
 };
-
 // export to use in server.js
 module.exports = errorHandler;

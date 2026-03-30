@@ -9,7 +9,10 @@ const userInfo = new mongoose.Schema({
   access_token: String,
   refresh_token: String,
   expires_in: Number,
-  expires_at: Date
+  expires_at: Date,
+  sheetId: String,
+  sheetUrl: String,
+  sheetDbUrl: String
 });
 const User = mongoose.model('User', userInfo);
 
