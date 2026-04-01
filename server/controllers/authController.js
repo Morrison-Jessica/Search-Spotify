@@ -104,7 +104,15 @@ const callback = async (req, res) => {
         }
         const jwtToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
         const appUrl = process.env.APP_URL;
-        const redirectUrl = `${appUrl}/#/dashboard?token=${encodeURIComponent(jwtToken)}`;
+          // 🍪 
+          res.cookie('token', jwtToken, {
+            httpOnly: true, 
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+            maxAge: 1000 * 60 * 60, // 1h
+          });
+
+        const redirectUrl = `${appUrl}/#/dashboard`;
         const safeUser = {
             id: user._id,
             googleId: user.googleId,

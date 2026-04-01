@@ -7,18 +7,39 @@ const mongoose = require('mongoose');
 const app = express();
 const routeHandler = require('./routes');
 const errorHandler = require('./middleware/errorHandler');
+const cookieParser = require('cookie-parser');
 
 // config env variables
 app.use(morgan('dev'));
+const allowedOrigins = [
+    process.env.CLIENT_URL,
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+].filter(Boolean);
+
 app.use(cors({ 
-    origin : process.env.CLIENT_URL,
+    origin : ( origin, callback ) => {
+        if ( !origin ) {
+            return callback( null, true );
+        }
+        if ( allowedOrigins.includes( origin ) ) {
+            return callback( null, true );
+        }
+        return callback( new Error( "Not allowed by CORS" ) );
+    },
     credentials : true,
     })
 );
+
+// handle preflight
+app.options( /.*/, cors({
+    origin: allowedOrigins,
+    credentials: true,
+}) );
 // CREATE dbConfig file and import here
 mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log("MongoDB connected"))
-    .catch((err) => console.error("MongoDB connection error:", err));
+.then(() => console.log("MongoDB connected"))
+.catch((err) => console.error("MongoDB connection error:", err));
 
 
 
@@ -28,6 +49,8 @@ mongoose.connect(process.env.MONGO_URI)
 
 // JSON data parsing - Must be before route handlers ... 
 app.use(express.json());  // this is the req.body res ...
+// 🍪
+app.use(cookieParser());
 
 // localhost:3000/api/v1/...
 app.use('/api/v1', routeHandler);
