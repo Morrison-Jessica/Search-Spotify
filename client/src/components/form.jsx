@@ -1,15 +1,19 @@
 // 🧩 📋Form ( 💰, 🚀 )
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import InputDollarAmount from "./inputDollarAmount.jsx";
 import Button from "./submitButton.jsx";
+import { apiFetch } from "../utils/api";
 
 
-export default function Form() {
+export default function Form( { onSaved } ) { // 📣 optional callback
     const { handleSubmit, register, reset } = useForm();
+    const [ status, setStatus ] = useState( "" );
+    const [ isError, setIsError ] = useState( false );
     const onSubmit = async ( data ) => {
-        // 🧮 build api base url
-        const apiBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
+        // 🧹 clear status
+        setStatus( "" );
+        setIsError( false );
 
         // 🧾 grab amount from form data
         const amountRaw = data?.amount;
@@ -17,33 +21,37 @@ export default function Form() {
 
         // 🚫 block if no amount
         if ( amountRaw === undefined || amountRaw === null || amountRaw === "" ) {
+            setStatus( "Enter an amount to save." );
+            setIsError( true );
             return;
         }
         if ( Number.isNaN( amount ) ) {
+            setStatus( "Amount must be a number." );
+            setIsError( true );
             return;
         }
 
-        // 🌐 send POST /app/trades with cookie auth
-        const res = await fetch( `${apiBaseUrl}/app/trades`, {
+        // 🌐 send POST /trades with cookie auth
+        const { res, data: payload } = await apiFetch( "/trades", {
             method: "POST",
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json",
-            },
             body: JSON.stringify( { amount } ),
         } );
 
-        // 🔍 read response
-        const payload = await res.json();
-
         // 🚫 stop if error
         if ( !res.ok ) {
-            console.error( payload?.message || "Failed to save trade" );
+            setStatus( payload?.message || "Failed to save trade" );
+            setIsError( true );
             return;
         }
 
         // ✅ clear form after save
         reset();
+        setStatus( "Trade saved." );
+        setIsError( false );
+        // 🔔 notify parent to refresh trades
+        if ( typeof onSaved === "function" ) {
+            onSaved();
+        }
       };
     
       return (
@@ -64,6 +72,11 @@ export default function Form() {
           <Button className="tradeForm__button" type="submit">
             Add Trade
           </Button>
+          { status && (
+            <p className={ isError ? "tradeForm__status tradeForm__status--error" : "tradeForm__status" }>
+              { status }
+            </p>
+          ) }
         </form>
       );
 }

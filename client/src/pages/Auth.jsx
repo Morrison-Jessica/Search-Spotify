@@ -1,7 +1,11 @@
 // 🔐 Auth Page
+import { getApiBaseUrl } from "../utils/api";
+
 const Auth = () => {
-  const apiBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
-  const loginUrl = `${apiBaseUrl}/auth/login`;
+  // 🧮 api base url
+  const apiBaseUrl = getApiBaseUrl();
+  // 🔗 login url
+  const loginUrl = `${ apiBaseUrl }/auth/login`;
 
   return (
     <div>

@@ -1,6 +1,5 @@
 // 🗄️📱💚 - for app functions...
-const { getTradeRows } = require("../services/googleSheetsService");
-const { createRow } = require("../services/sheetDbService");
+const { getTradeRows, appendTradeRow } = require("../services/googleSheetsService"); // 📗 sheets helpers
 
 // =========================
 // ===== DASHBOARD =========
@@ -61,22 +60,16 @@ const createTrade = async (req, res, next) => {
         });
     }
 
-    const sheetDbUrl = user.sheetDbUrl || process.env.SHEETDB_API_URL;
-    if (!sheetDbUrl) {
-        return res.status(400).json({
-            success: false,
-            message: "Missing SheetDB URL",
-        });
-    }
-
     const date = new Date().toISOString();
     const userName = user.name || user.email || "User";
 
-    await createRow({
-        sheetDbUrl,
-        date,
-        userName,
-        amount,
+    // 🧾 build row for Google Sheets
+    const row = [date, userName, amount];
+    // 🧮 append row to user's sheet (Google Sheets API)
+    await appendTradeRow({
+        refreshToken: user.refresh_token,
+        spreadsheetId: user.sheetId,
+        row,
     });
 
     return res.status(201).json({
